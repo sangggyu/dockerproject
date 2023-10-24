@@ -14,7 +14,7 @@ services:
     restart: always
   app:
     build:
-      context: ./build/libs
+      context: .
       dockerfile: Dockerfile
     container_name: board_app
     ports:
