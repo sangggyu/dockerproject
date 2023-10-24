@@ -1,25 +1,20 @@
-# 처음 빌드했던거
-FROM openjdk:17
-ARG JAR_FILE=build/libs/*.jar
-COPY ${JAR_FILE} app.jar
-ENTRYPOINT ["java","-jar","/app.jar"]
-
-
-#FROM gradle:7.4-jdk17-alpine as builder
-#
-#WORKDIR /app
-#COPY ./ ./
-#RUN gradle clean build --no-daemon
-## 빌더 이미지에서 애플리케이션 빌드
-##COPY ./build/libs/*.jar /app.jar
-#
-## APP
+## 처음 빌드했던거
 #FROM openjdk:17
-#WORKDIR /app
-## 빌더 이미지에서 jar 파일만 복사
+#ARG JAR_FILE=build/libs/*.jar
 #COPY ${JAR_FILE} app.jar
-#
-#EXPOSE 8080
-## root 대신 nobody 권한으로 실행
-#USER nobody
 #ENTRYPOINT ["java","-jar","/app.jar"]
+
+# 첫 번째 스테이지: 애플리케이션 빌드
+FROM openjdk:17 AS build
+COPY . /home/gradle/src
+WORKDIR /home/gradle/src
+ARG JAR_FILE=build/libs/*.jar
+
+# 두 번째 스테이지: 테스트
+FROM build AS test
+RUN ./gradlew test
+
+# 세 번째 스테이지: 최종 이미지 생성
+FROM openjdk:17
+COPY --from=build /home/gradle/src/build/libs/*.jar /app.jar
+ENTRYPOINT ["java", "-jar", "/app.jar"]
